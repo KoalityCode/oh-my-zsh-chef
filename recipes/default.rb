@@ -19,6 +19,18 @@ node['oh_my_zsh']['users'].each do |user_hash|
     action :sync
   end
 
+  theme_info = user_hash[:theme] || {}
+  if theme_info.is_a?(String)
+     theme_info = { :name => theme_info, :source => nil }
+  end
+  if not theme_info[:source].nil? and theme_info != ""
+    remote_file "#{home_directory}/.oh-my-zsh/themes/#{theme_info[:name]}.zsh-theme" do
+      source theme_info[:source]
+      owner user_hash[:login]
+      group user_hash[:login]
+    end
+  end
+
   template "#{home_directory}/.zshrc" do
     source "zshrc.erb"
     owner user_hash[:login]
@@ -26,7 +38,7 @@ node['oh_my_zsh']['users'].each do |user_hash|
     action :create_if_missing
     variables({
       :user => user_hash[:login],
-      :theme => user_hash[:theme] || 'robbyrussell',
+      :theme => theme_info[:name] || 'robbyrussell',
       :case_sensitive => user_hash[:case_sensitive] || false,
       :plugins => user_hash[:plugins] || %w(git)
     })
